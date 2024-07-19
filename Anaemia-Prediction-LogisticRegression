@@ -1,0 +1,1021 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "4a4cfe55",
+   "metadata": {
+    "_cell_guid": "b1076dfc-b9ad-4769-8c92-a6c4dae69d19",
+    "_uuid": "8f2839f25d086af736a60e9eeb907d3b93b6e0e5",
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:46.535566Z",
+     "iopub.status.busy": "2024-07-19T17:55:46.535180Z",
+     "iopub.status.idle": "2024-07-19T17:55:47.387643Z",
+     "shell.execute_reply": "2024-07-19T17:55:47.386551Z"
+    },
+    "papermill": {
+     "duration": 0.862051,
+     "end_time": "2024-07-19T17:55:47.390172",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:46.528121",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "/kaggle/input/anaemia-prediction/output.csv\n"
+     ]
+    }
+   ],
+   "source": [
+    "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+    "# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python\n",
+    "# For example, here's several helpful packages to load\n",
+    "\n",
+    "import numpy as np # linear algebra\n",
+    "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+    "\n",
+    "# Input data files are available in the read-only \"../input/\" directory\n",
+    "# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory\n",
+    "\n",
+    "import os\n",
+    "for dirname, _, filenames in os.walk('/kaggle/input'):\n",
+    "    for filename in filenames:\n",
+    "        print(os.path.join(dirname, filename))\n",
+    "\n",
+    "# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using \"Save & Run All\" \n",
+    "# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "8c0cce18",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:47.402862Z",
+     "iopub.status.busy": "2024-07-19T17:55:47.401859Z",
+     "iopub.status.idle": "2024-07-19T17:55:47.432767Z",
+     "shell.execute_reply": "2024-07-19T17:55:47.431807Z"
+    },
+    "papermill": {
+     "duration": 0.03991,
+     "end_time": "2024-07-19T17:55:47.435384",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:47.395474",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "df = pd.read_csv('/kaggle/input/anaemia-prediction/output.csv', index_col='Number')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "f351d048",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:47.447543Z",
+     "iopub.status.busy": "2024-07-19T17:55:47.447138Z",
+     "iopub.status.idle": "2024-07-19T17:55:47.467958Z",
+     "shell.execute_reply": "2024-07-19T17:55:47.466938Z"
+    },
+    "papermill": {
+     "duration": 0.029698,
+     "end_time": "2024-07-19T17:55:47.470452",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:47.440754",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>Sex</th>\n",
+       "      <th>%Red Pixel</th>\n",
+       "      <th>%Green pixel</th>\n",
+       "      <th>%Blue pixel</th>\n",
+       "      <th>Hb</th>\n",
+       "      <th>Anaemic</th>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Number</th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>M</td>\n",
+       "      <td>43.2555</td>\n",
+       "      <td>30.8421</td>\n",
+       "      <td>25.9025</td>\n",
+       "      <td>6.3</td>\n",
+       "      <td>Yes</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>F</td>\n",
+       "      <td>45.6033</td>\n",
+       "      <td>28.1900</td>\n",
+       "      <td>26.2067</td>\n",
+       "      <td>13.5</td>\n",
+       "      <td>No</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>F</td>\n",
+       "      <td>45.0107</td>\n",
+       "      <td>28.9677</td>\n",
+       "      <td>26.0215</td>\n",
+       "      <td>11.7</td>\n",
+       "      <td>No</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>F</td>\n",
+       "      <td>44.5398</td>\n",
+       "      <td>28.9899</td>\n",
+       "      <td>26.4703</td>\n",
+       "      <td>13.5</td>\n",
+       "      <td>No</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5</th>\n",
+       "      <td>M</td>\n",
+       "      <td>43.2870</td>\n",
+       "      <td>30.6972</td>\n",
+       "      <td>26.0158</td>\n",
+       "      <td>12.4</td>\n",
+       "      <td>No</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       Sex  %Red Pixel  %Green pixel  %Blue pixel    Hb Anaemic\n",
+       "Number                                                         \n",
+       "1        M     43.2555       30.8421      25.9025   6.3     Yes\n",
+       "2        F     45.6033       28.1900      26.2067  13.5      No\n",
+       "3       F      45.0107       28.9677      26.0215  11.7      No\n",
+       "4        F     44.5398       28.9899      26.4703  13.5      No\n",
+       "5       M      43.2870       30.6972      26.0158  12.4      No"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "575e7f6e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:47.483917Z",
+     "iopub.status.busy": "2024-07-19T17:55:47.483023Z",
+     "iopub.status.idle": "2024-07-19T17:55:47.491182Z",
+     "shell.execute_reply": "2024-07-19T17:55:47.490200Z"
+    },
+    "papermill": {
+     "duration": 0.017312,
+     "end_time": "2024-07-19T17:55:47.493577",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:47.476265",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Sex             0\n",
+       "%Red Pixel      0\n",
+       "%Green pixel    0\n",
+       "%Blue pixel     0\n",
+       "Hb              0\n",
+       "Anaemic         0\n",
+       "dtype: int64"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.isnull().sum()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "d3591f99",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:47.506829Z",
+     "iopub.status.busy": "2024-07-19T17:55:47.505770Z",
+     "iopub.status.idle": "2024-07-19T17:55:47.513730Z",
+     "shell.execute_reply": "2024-07-19T17:55:47.512572Z"
+    },
+    "papermill": {
+     "duration": 0.016768,
+     "end_time": "2024-07-19T17:55:47.515857",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:47.499089",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "X = df[[ 'Sex', '%Red Pixel', '%Green pixel', '%Blue pixel', 'Hb']]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "64eccb41",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:47.528799Z",
+     "iopub.status.busy": "2024-07-19T17:55:47.527987Z",
+     "iopub.status.idle": "2024-07-19T17:55:47.544377Z",
+     "shell.execute_reply": "2024-07-19T17:55:47.543394Z"
+    },
+    "papermill": {
+     "duration": 0.025181,
+     "end_time": "2024-07-19T17:55:47.546468",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:47.521287",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>Sex</th>\n",
+       "      <th>%Red Pixel</th>\n",
+       "      <th>%Green pixel</th>\n",
+       "      <th>%Blue pixel</th>\n",
+       "      <th>Hb</th>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Number</th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>M</td>\n",
+       "      <td>43.2555</td>\n",
+       "      <td>30.8421</td>\n",
+       "      <td>25.9025</td>\n",
+       "      <td>6.3</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>F</td>\n",
+       "      <td>45.6033</td>\n",
+       "      <td>28.1900</td>\n",
+       "      <td>26.2067</td>\n",
+       "      <td>13.5</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>F</td>\n",
+       "      <td>45.0107</td>\n",
+       "      <td>28.9677</td>\n",
+       "      <td>26.0215</td>\n",
+       "      <td>11.7</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>F</td>\n",
+       "      <td>44.5398</td>\n",
+       "      <td>28.9899</td>\n",
+       "      <td>26.4703</td>\n",
+       "      <td>13.5</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5</th>\n",
+       "      <td>M</td>\n",
+       "      <td>43.2870</td>\n",
+       "      <td>30.6972</td>\n",
+       "      <td>26.0158</td>\n",
+       "      <td>12.4</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>...</th>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "      <td>...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>100</th>\n",
+       "      <td>F</td>\n",
+       "      <td>49.9999</td>\n",
+       "      <td>29.2860</td>\n",
+       "      <td>20.7141</td>\n",
+       "      <td>14.5</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>101</th>\n",
+       "      <td>M</td>\n",
+       "      <td>42.2324</td>\n",
+       "      <td>30.6757</td>\n",
+       "      <td>27.0919</td>\n",
+       "      <td>6.3</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>102</th>\n",
+       "      <td>F</td>\n",
+       "      <td>45.6064</td>\n",
+       "      <td>31.9084</td>\n",
+       "      <td>22.4852</td>\n",
+       "      <td>12.7</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>103</th>\n",
+       "      <td>M</td>\n",
+       "      <td>45.2095</td>\n",
+       "      <td>29.2769</td>\n",
+       "      <td>25.5136</td>\n",
+       "      <td>13.4</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>104</th>\n",
+       "      <td>F</td>\n",
+       "      <td>43.5706</td>\n",
+       "      <td>29.8094</td>\n",
+       "      <td>26.6199</td>\n",
+       "      <td>12.2</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>104 rows × 5 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "       Sex  %Red Pixel  %Green pixel  %Blue pixel    Hb\n",
+       "Number                                                 \n",
+       "1        M     43.2555       30.8421      25.9025   6.3\n",
+       "2        F     45.6033       28.1900      26.2067  13.5\n",
+       "3       F      45.0107       28.9677      26.0215  11.7\n",
+       "4        F     44.5398       28.9899      26.4703  13.5\n",
+       "5       M      43.2870       30.6972      26.0158  12.4\n",
+       "...     ..         ...           ...          ...   ...\n",
+       "100     F      49.9999       29.2860      20.7141  14.5\n",
+       "101     M      42.2324       30.6757      27.0919   6.3\n",
+       "102      F     45.6064       31.9084      22.4852  12.7\n",
+       "103     M      45.2095       29.2769      25.5136  13.4\n",
+       "104      F     43.5706       29.8094      26.6199  12.2\n",
+       "\n",
+       "[104 rows x 5 columns]"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "01782702",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:47.559420Z",
+     "iopub.status.busy": "2024-07-19T17:55:47.559070Z",
+     "iopub.status.idle": "2024-07-19T17:55:47.573027Z",
+     "shell.execute_reply": "2024-07-19T17:55:47.571890Z"
+    },
+    "papermill": {
+     "duration": 0.023851,
+     "end_time": "2024-07-19T17:55:47.576072",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:47.552221",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array(['M', 'F', 'F ', 'M '], dtype=object)"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X['Sex'].unique()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "aa5be3a8",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:47.589195Z",
+     "iopub.status.busy": "2024-07-19T17:55:47.588841Z",
+     "iopub.status.idle": "2024-07-19T17:55:47.594605Z",
+     "shell.execute_reply": "2024-07-19T17:55:47.593535Z"
+    },
+    "papermill": {
+     "duration": 0.014863,
+     "end_time": "2024-07-19T17:55:47.596742",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:47.581879",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "X.loc[:, 'Sex'] = X['Sex'].str.strip()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "ac20b54d",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:47.610863Z",
+     "iopub.status.busy": "2024-07-19T17:55:47.609800Z",
+     "iopub.status.idle": "2024-07-19T17:55:47.618957Z",
+     "shell.execute_reply": "2024-07-19T17:55:47.617866Z"
+    },
+    "papermill": {
+     "duration": 0.018471,
+     "end_time": "2024-07-19T17:55:47.621137",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:47.602666",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "one_hot_encoded_data = pd.get_dummies(X, columns = ['Sex'])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "6c958aa1",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:47.634422Z",
+     "iopub.status.busy": "2024-07-19T17:55:47.634055Z",
+     "iopub.status.idle": "2024-07-19T17:55:47.647575Z",
+     "shell.execute_reply": "2024-07-19T17:55:47.646352Z"
+    },
+    "papermill": {
+     "duration": 0.022606,
+     "end_time": "2024-07-19T17:55:47.649638",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:47.627032",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>%Red Pixel</th>\n",
+       "      <th>%Green pixel</th>\n",
+       "      <th>%Blue pixel</th>\n",
+       "      <th>Hb</th>\n",
+       "      <th>Sex_F</th>\n",
+       "      <th>Sex_M</th>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Number</th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>43.2555</td>\n",
+       "      <td>30.8421</td>\n",
+       "      <td>25.9025</td>\n",
+       "      <td>6.3</td>\n",
+       "      <td>False</td>\n",
+       "      <td>True</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>45.6033</td>\n",
+       "      <td>28.1900</td>\n",
+       "      <td>26.2067</td>\n",
+       "      <td>13.5</td>\n",
+       "      <td>True</td>\n",
+       "      <td>False</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>45.0107</td>\n",
+       "      <td>28.9677</td>\n",
+       "      <td>26.0215</td>\n",
+       "      <td>11.7</td>\n",
+       "      <td>True</td>\n",
+       "      <td>False</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>44.5398</td>\n",
+       "      <td>28.9899</td>\n",
+       "      <td>26.4703</td>\n",
+       "      <td>13.5</td>\n",
+       "      <td>True</td>\n",
+       "      <td>False</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5</th>\n",
+       "      <td>43.2870</td>\n",
+       "      <td>30.6972</td>\n",
+       "      <td>26.0158</td>\n",
+       "      <td>12.4</td>\n",
+       "      <td>False</td>\n",
+       "      <td>True</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "        %Red Pixel  %Green pixel  %Blue pixel    Hb  Sex_F  Sex_M\n",
+       "Number                                                           \n",
+       "1          43.2555       30.8421      25.9025   6.3  False   True\n",
+       "2          45.6033       28.1900      26.2067  13.5   True  False\n",
+       "3          45.0107       28.9677      26.0215  11.7   True  False\n",
+       "4          44.5398       28.9899      26.4703  13.5   True  False\n",
+       "5          43.2870       30.6972      26.0158  12.4  False   True"
+      ]
+     },
+     "execution_count": 10,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "one_hot_encoded_data.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "25b722df",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:47.663164Z",
+     "iopub.status.busy": "2024-07-19T17:55:47.662825Z",
+     "iopub.status.idle": "2024-07-19T17:55:47.673700Z",
+     "shell.execute_reply": "2024-07-19T17:55:47.672570Z"
+    },
+    "papermill": {
+     "duration": 0.020854,
+     "end_time": "2024-07-19T17:55:47.676462",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:47.655608",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "              %Red Pixel  %Green pixel  %Blue pixel        Hb     Sex_F  \\\n",
+      "%Red Pixel      1.000000     -0.732003    -0.845764  0.424586 -0.137778   \n",
+      "%Green pixel   -0.732003      1.000000     0.255589 -0.637340  0.234813   \n",
+      "%Blue pixel    -0.845764      0.255589     1.000000 -0.103373  0.011616   \n",
+      "Hb              0.424586     -0.637340    -0.103373  1.000000 -0.254932   \n",
+      "Sex_F          -0.137778      0.234813     0.011616 -0.254932  1.000000   \n",
+      "Sex_M           0.137778     -0.234813    -0.011616  0.254932 -1.000000   \n",
+      "\n",
+      "                 Sex_M  \n",
+      "%Red Pixel    0.137778  \n",
+      "%Green pixel -0.234813  \n",
+      "%Blue pixel  -0.011616  \n",
+      "Hb            0.254932  \n",
+      "Sex_F        -1.000000  \n",
+      "Sex_M         1.000000  \n"
+     ]
+    }
+   ],
+   "source": [
+    "correlation_matrix = one_hot_encoded_data.corr()\n",
+    "\n",
+    "print(correlation_matrix)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "cfa93d8f",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:47.690672Z",
+     "iopub.status.busy": "2024-07-19T17:55:47.690289Z",
+     "iopub.status.idle": "2024-07-19T17:55:47.695285Z",
+     "shell.execute_reply": "2024-07-19T17:55:47.694138Z"
+    },
+    "papermill": {
+     "duration": 0.014585,
+     "end_time": "2024-07-19T17:55:47.697564",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:47.682979",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "Y = df['Anaemic']\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "d426ba02",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:47.711248Z",
+     "iopub.status.busy": "2024-07-19T17:55:47.710881Z",
+     "iopub.status.idle": "2024-07-19T17:55:48.916649Z",
+     "shell.execute_reply": "2024-07-19T17:55:48.915687Z"
+    },
+    "papermill": {
+     "duration": 1.215547,
+     "end_time": "2024-07-19T17:55:48.919202",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:47.703655",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.model_selection import train_test_split\n",
+    "\n",
+    "X_train,X_test,Y_train,Y_test = train_test_split(one_hot_encoded_data, Y, test_size=0.4, random_state=42)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "305253ce",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:48.934291Z",
+     "iopub.status.busy": "2024-07-19T17:55:48.933445Z",
+     "iopub.status.idle": "2024-07-19T17:55:48.939934Z",
+     "shell.execute_reply": "2024-07-19T17:55:48.938973Z"
+    },
+    "papermill": {
+     "duration": 0.016157,
+     "end_time": "2024-07-19T17:55:48.942270",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:48.926113",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(62,)"
+      ]
+     },
+     "execution_count": 14,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "Y_train.shape"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "ccf97d2e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:48.957229Z",
+     "iopub.status.busy": "2024-07-19T17:55:48.956159Z",
+     "iopub.status.idle": "2024-07-19T17:55:49.074211Z",
+     "shell.execute_reply": "2024-07-19T17:55:49.073244Z"
+    },
+    "papermill": {
+     "duration": 0.128092,
+     "end_time": "2024-07-19T17:55:49.076660",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:48.948568",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.linear_model import LogisticRegression\n",
+    "\n",
+    "model = LogisticRegression(random_state=0).fit(X_train, Y_train)\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "ad9cbda2",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:49.091091Z",
+     "iopub.status.busy": "2024-07-19T17:55:49.090721Z",
+     "iopub.status.idle": "2024-07-19T17:55:49.100739Z",
+     "shell.execute_reply": "2024-07-19T17:55:49.099707Z"
+    },
+    "papermill": {
+     "duration": 0.019739,
+     "end_time": "2024-07-19T17:55:49.102949",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:49.083210",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0.9761904761904762"
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "model.score(X_test,Y_test)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "eddc7ba5",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:49.117264Z",
+     "iopub.status.busy": "2024-07-19T17:55:49.116884Z",
+     "iopub.status.idle": "2024-07-19T17:55:49.123675Z",
+     "shell.execute_reply": "2024-07-19T17:55:49.122690Z"
+    },
+    "papermill": {
+     "duration": 0.016384,
+     "end_time": "2024-07-19T17:55:49.125788",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:49.109404",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "predicted = model.predict(X_test)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "794ceaec",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:49.140317Z",
+     "iopub.status.busy": "2024-07-19T17:55:49.139915Z",
+     "iopub.status.idle": "2024-07-19T17:55:49.145191Z",
+     "shell.execute_reply": "2024-07-19T17:55:49.144206Z"
+    },
+    "papermill": {
+     "duration": 0.015239,
+     "end_time": "2024-07-19T17:55:49.147394",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:49.132155",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "newdf = pd.DataFrame({'actual':Y_test,'Predicted':predicted})"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "1f18215d",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-07-19T17:55:49.162021Z",
+     "iopub.status.busy": "2024-07-19T17:55:49.161606Z",
+     "iopub.status.idle": "2024-07-19T17:55:49.170778Z",
+     "shell.execute_reply": "2024-07-19T17:55:49.169745Z"
+    },
+    "papermill": {
+     "duration": 0.019044,
+     "end_time": "2024-07-19T17:55:49.172991",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:49.153947",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0.9761904761904762"
+      ]
+     },
+     "execution_count": 19,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "from sklearn.metrics import accuracy_score\n",
+    "accuracy = accuracy_score(newdf['actual'], newdf['Predicted'])\n",
+    "accuracy"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "28b7d028",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006186,
+     "end_time": "2024-07-19T17:55:49.185696",
+     "exception": false,
+     "start_time": "2024-07-19T17:55:49.179510",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kaggle": {
+   "accelerator": "none",
+   "dataSources": [
+    {
+     "datasetId": 5334004,
+     "sourceId": 8859848,
+     "sourceType": "datasetVersion"
+    }
+   ],
+   "dockerImageVersionId": 30746,
+   "isGpuEnabled": false,
+   "isInternetEnabled": true,
+   "language": "python",
+   "sourceType": "notebook"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.13"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 5.955444,
+   "end_time": "2024-07-19T17:55:49.812926",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2024-07-19T17:55:43.857482",
+   "version": "2.5.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
